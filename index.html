@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <title>Redirecting...</title>
+  <meta http-equiv="refresh" content="3;url=" id="redirectMeta">
   <script>
     const params = new URLSearchParams(window.location.search);
     const url = params.get("url");
 
     if (url) {
-      window.location.href = decodeURIComponent(url);
+      document.getElementById("redirectMeta").setAttribute("content", "3;url=" + url);
     } else {
       document.write("❌ 缺少 url 參數！");
     }
