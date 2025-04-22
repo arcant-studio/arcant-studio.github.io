@@ -1,21 +1,31 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Redirecting...</title>
-  <meta http-equiv="refresh" content="3;url=" id="redirectMeta">
-  <script>
-    const params = new URLSearchParams(window.location.search);
-    const url = params.get("url");
-
-    if (url) {
-      document.getElementById("redirectMeta").setAttribute("content", "3;url=" + decodeURIComponent(url));
-    } else {
-      document.write("❌ 缺少 url 參數！");
-    }
-  </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirect</title>
 </head>
 <body>
-  <p>正在跳轉中，請稍候...</p>
+    <script>
+        // 獲取 URL 參數
+        function getQueryParam(param) {
+            let urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        let type = getQueryParam('type');
+        let url = getQueryParam('url');
+
+        if (!type || type === 'url') {
+            // 如果沒有 type 或 type 是 url，直接跳轉
+            window.location.href = url;
+        } else if (type === 'base64') {
+            // 如果是 base64，解碼後跳轉
+            let decodedUrl = atob(url);
+            window.location.href = decodedUrl;
+        } else {
+            alert("無效的參數！");
+        }
+    </script>
 </body>
 </html>
