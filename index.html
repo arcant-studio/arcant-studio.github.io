@@ -9,7 +9,7 @@
     const url = params.get("url");
 
     if (url) {
-      document.getElementById("redirectMeta").setAttribute("content", "3;url=" + url);
+      document.getElementById("redirectMeta").setAttribute("content", "3;url=" + decodeURIComponent(url));
     } else {
       document.write("❌ 缺少 url 參數！");
     }
