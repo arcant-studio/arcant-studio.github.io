@@ -7,6 +7,7 @@
 </head>
 <body>
     <script>
+        // 獲取 URL 參數
         function getQueryParam(param) {
             let urlParams = new URLSearchParams(window.location.search);
             return urlParams.get(param);
@@ -16,8 +17,10 @@
         let url = getQueryParam('url');
 
         if (!type || type === 'url') {
+            // 如果沒有 type 或 type 是 url，直接跳轉
             window.location.href = url;
         } else if (type === 'base64') {
+            // 如果是 base64，解碼後跳轉
             let decodedUrl = atob(url);
             window.location.href = decodedUrl;
         } else {
