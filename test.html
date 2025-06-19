@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arcant Studio - 網址歸類系統</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo h1 {
+            font-size: 2.5em;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .logo p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .status-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-left: 4px solid #28a745;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .status-icon {
+            width: 24px;
+            height: 24px;
+            color: #28a745;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            border-right: 1px solid #dee2e6;
+        }
+
+        .tab-button:last-child {
+            border-right: none;
+        }
+
+        .tab-button.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e6ed;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .url-preview {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            margin-top: 10px;
+            font-family: monospace;
+            word-break: break-all;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-success {
+            background: #28a745;
+        }
+
+        .loading {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            color: #666;
+            margin-left: 15px;
+        }
+
+        .loading.show {
+            display: flex;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .urls-list {
+            margin-top: 30px;
+        }
+
+        .url-item {
+            background: white;
+            border: 1px solid #e0e6ed;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .url-item:hover {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .url-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .url-item-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        .url-item-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .url-item-short {
+            color: #667eea;
+            font-family: monospace;
+            word-break: break-all;
+            margin-bottom: 5px;
+        }
+
+        .url-item-long {
+            color: #666;
+            font-size: 0.9em;
+            word-break: break-all;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            animation: slideIn 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .form-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .url-item-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .url-item-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <h1>Arcant Studio</h1>
+            <p>網址歸類系統</p>
+        </div>
+
+        <div class="status-section">
+            <svg class="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 12l2 2 4-4"></path>
+                <circle cx="12" cy="12" r="10"></circle>
+            </svg>
+            <div>
+                <strong>服務狀態：正常</strong>
+                <p style="margin: 5px 0 0 0; color: #666; font-size: 0.9em;">
+                    透過 Cloudflare Workers 安全連接到 GitHub
+                </p>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab('create')">建立短網址</button>
+            <button class="tab-button" onclick="switchTab('manage')">管理網址</button>
+        </div>
+
+        <div id="message-container"></div>
+
+        <div id="create-tab" class="tab-content active">
+            <form id="url-form">
+                <div class="form-group">
+                    <label for="target-url">目標網址</label>
+                    <input type="url" id="target-url" placeholder="https://example.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="short-name">短網址名稱</label>
+                    <input type="text" id="short-name" placeholder="例如: google" required pattern="[a-zA-Z0-9\-_]+" title="只能包含英文字母、數字、連字號和底線">
+                    <div class="url-preview">
+                        預覽: <span id="preview-url">https://link.arcantstudio.com/</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="page-title">頁面標題（可選）</label>
+                    <input type="text" id="page-title" placeholder="例如: Google 搜尋">
+                </div>
+                <div class="form-group">
+                    <label for="commit-message">提交訊息（可選）</label>
+                    <input type="text" id="commit-message" placeholder="例如: Add redirect for Google">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn" id="create-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        建立短網址
+                    </button>
+                    <div class="loading" id="loading">
+                        <div class="spinner"></div>
+                        <span>正在建立...</span>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div id="manage-tab" class="tab-content">
+            <div style="margin-bottom: 20px;">
+                <button class="btn btn-secondary" onclick="loadShortUrls()" id="refresh-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="23,4 23,10 17,10"></polyline>
+                        <polyline points="1,20 1,14 7,14"></polyline>
+                        <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path>
+                    </svg>
+                    重新載入
+                </button>
+                <div class="loading" id="list-loading">
+                    <div class="spinner"></div>
+                    <span>載入中...</span>
+                </div>
+            </div>
+            <div class="urls-list" id="urls-list">
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                    <h3>點擊「重新載入」來查看現有的短網址</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Cloudflare Worker API 端點
+        const WORKER_URL = 'https://your-worker.your-subdomain.workers.dev';
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 監聽短網址名稱輸入，更新預覽
+            document.getElementById('short-name').addEventListener('input', function() {
+                const shortName = this.value;
+                document.getElementById('preview-url').textContent = 
+                    'https://link.arcantstudio.com/' + (shortName || '');
+            });
+            
+            // 處理表單提交
+            document.getElementById('url-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                createShortUrl();
+            });
+        });
+
+        // 切換分頁
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            document.querySelector(`[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            if (tabName === 'manage') {
+                loadShortUrls();
+            }
+        }
+
+        // 建立短網址
+        async function createShortUrl() {
+            const targetUrl = document.getElementById('target-url').value.trim();
+            const shortName = document.getElementById('short-name').value.trim();
+            const pageTitle = document.getElementById('page-title').value.trim();
+            const commitMessage = document.getElementById('commit-message').value.trim();
+
+            // 驗證輸入
+            if (!targetUrl || !shortName) {
+                showMessage('請填寫目標網址和短網址名稱', 'error');
+                return;
+            }
+
+            // 驗證網址格式
+            try {
+                new URL(targetUrl);
+            } catch {
+                showMessage('請輸入有效的網址格式', 'error');
+                return;
+            }
+
+            // 顯示載入狀態
+            const createBtn = document.getElementById('create-btn');
+            const loading = document.getElementById('loading');
+            createBtn.disabled = true;
+            loading.classList.add('show');
+
+            try {
+                const response = await fetch(`${WORKER_URL}/create-shorturl`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        shortName: shortName,
