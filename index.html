@@ -3,133 +3,339 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>短網址管理系統</title>
+    <title>Arcant Link | 短網址產生器</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f9fafb;
+        /* CSS 變數，方便統一管理顏色風格 */
+        :root {
+            --primary-color: #6a11cb;
+            --secondary-color: #2575fc;
+            --card-bg-color: rgba(255, 255, 255, 0.95);
+            --text-color: #333;
+            --text-light-color: #555;
+            --border-color: #ddd;
+            --success-color: #28a745;
+            --error-color: #dc3545;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        /* 全域樣式重設與設定 */
+        * {
             margin: 0;
-            padding: 2rem;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family);
             display: flex;
             flex-direction: column;
+            justify-content: center;
             align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: var(--text-color);
+            padding: 1rem;
         }
+
+        /* 主容器與卡片樣式 */
         .container {
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
-            padding: 2rem;
             width: 100%;
-            max-width: 500px;
-        }
-        h1 {
+            max-width: 550px;
+            background: var(--card-bg-color);
+            padding: 2.5rem 3rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             text-align: center;
-            margin-bottom: 1.5rem;
-            color: #333;
+            transition: all 0.3s ease;
         }
+
+        /* 響應式調整 */
+        @media (max-width: 600px) {
+            .container {
+                padding: 2rem 1.5rem;
+            }
+        }
+        
+        /* 標題與 LOGO */
+        .header {
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1rem;
+            color: var(--text-light-color);
+        }
+
+        /* 表單群組樣式 */
+        .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
         label {
             display: block;
-            margin-top: 1rem;
-            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: var(--text-light-color);
+            font-weight: 600;
+            font-size: 0.9rem;
         }
-        input, button {
+
+        /* 輸入框組合樣式 */
+        .input-group {
+            display: flex;
+            align-items: center;
+        }
+        
+        .input-group-text {
             padding: 0.75rem;
-            margin-top: 0.5rem;
-            width: 100%;
-            box-sizing: border-box;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            font-size: 1rem;
+            background-color: #f0f0f0;
+            border: 1px solid var(--border-color);
+            border-right: none;
+            border-radius: 8px 0 0 8px;
+            color: var(--text-light-color);
+            font-size: 0.9rem;
+            white-space: nowrap;
         }
+
+        input[type="text"], input[type="url"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .input-group input {
+            border-radius: 0 8px 8px 0;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(37, 117, 252, 0.2);
+        }
+
+        /* 提交按鈕 */
         button {
-            background-color: #2563eb;
+            width: 100%;
+            padding: 0.8rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             color: white;
             border: none;
-            margin-top: 1.5rem;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
-        button:hover {
-            background-color: #1d4ed8;
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
         }
-        #log {
-            margin-top: 1rem;
-            white-space: pre-wrap;
-            background: #f1f5f9;
+
+        button:disabled {
+            background: #aab8c2;
+            cursor: not-allowed;
+        }
+        
+        /* 按鈕載入動畫 */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* 狀態訊息區域 */
+        #status {
+            margin-top: 1.5rem;
             padding: 1rem;
             border-radius: 8px;
-            font-size: 0.95rem;
-            color: #111827;
+            font-weight: 500;
+            display: none; /* 預設隱藏 */
+            opacity: 0;
+            transition: opacity 0.5s;
         }
+        #status.show {
+            display: block;
+            opacity: 1;
+        }
+        #status.success {
+            background-color: rgba(40, 167, 69, 0.1);
+            color: var(--success-color);
+            border: 1px solid rgba(40, 167, 69, 0.2);
+        }
+        #status.error {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: var(--error-color);
+            border: 1px solid rgba(220, 53, 69, 0.2);
+        }
+        #status a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        #status a:hover {
+            text-decoration: underline;
+        }
+
+        /* 複製按鈕 */
+        .copy-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-light-color);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-left: 0.5rem;
+        }
+        .copy-btn:hover {
+            background-color: #f0f0f0;
+        }
+
     </style>
 </head>
 <body>
-    <script>
-        function getQueryParam(param) {
-            let urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get(param);
-        }
-
-        let type = getQueryParam('type');
-        let url = getQueryParam('url');
-
-        if (url) {
-            if (!type || type === 'url') {
-                window.location.href = url;
-            } else if (type === 'base64') {
-                let decodedUrl = atob(url);
-                window.location.href = decodedUrl;
-            } else {
-                alert("無效的參數！");
-            }
-        }
-    </script>
 
     <div class="container">
-        <h1>短網址管理系統</h1>
-        <form id="create-form">
-            <label for="name">短網址名稱（例如 test）：</label>
-            <input type="text" id="name" name="name" required>
+        <div class="header">
+            <h1>Link Shortener</h1>
+            <p>一個基於 GitHub & Cloudflare 的極速短網址服務</p>
+        </div>
 
-            <label for="url">目標網址（https://...）：</label>
-            <input type="url" id="url" name="url" required>
-
-            <button type="submit">建立短網址</button>
+        <form id="linkForm">
+            <div class="form-group">
+                <label for="url">目標網址</label>
+                <input type="url" id="url" name="url" placeholder="https://www.google.com/" required>
+            </div>
+            <div class="form-group">
+                <label for="name">自訂短路徑</label>
+                <div class="input-group">
+                    <span class="input-group-text" id="domain-prefix"></span>
+                    <input type="text" id="name" name="name" placeholder="my-awesome-link" required pattern="[a-zA-Z0-9_-]+">
+                </div>
+            </div>
+            <button type="submit" id="submitBtn">
+                <span id="btn-text">產生短網址</span>
+                <div class="spinner" id="spinner" style="display: none;"></div>
+            </button>
         </form>
 
-        <div id="log"></div>
+        <div id="status"></div>
     </div>
 
     <script>
-        const form = document.getElementById('create-form');
-        const log = document.getElementById('log');
+        // --- ⚙️ 請在這裡修改成您的設定 ⚙️ ---
+        const yourWorkerUrl = 'https://connet.tu28291797.workers.dev/';
+        const yourDomain = 'link.arcantstudio.com';
+        // ------------------------------------
 
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
+        const form = document.getElementById('linkForm');
+        const statusDiv = document.getElementById('status');
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btn-text');
+        const spinner = document.getElementById('spinner');
+        const domainPrefix = document.getElementById('domain-prefix');
 
-            const name = form.name.value.trim();
-            const targetUrl = form.url.value.trim();
+        // 初始化網域前綴
+        domainPrefix.textContent = `https://` + yourDomain + '/';
 
-            if (!name || !targetUrl) {
-                log.textContent = '請填寫所有欄位';
+        form.addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const url = document.getElementById('url').value;
+            const name = document.getElementById('name').value;
+
+            if (!url || !name) {
+                showStatus('請填寫所有欄位！', 'error');
                 return;
             }
 
-            log.textContent = '正在建立短網址...';
+            // 進入載入狀態
+            setLoading(true);
 
             try {
-                const res = await fetch('https://connet.tu28291797.workers.dev', {
+                const response = await fetch(yourWorkerUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, targetUrl })
+                    body: JSON.stringify({ name, url })
                 });
 
-                const text = await res.text();
-                log.textContent = text;
-            } catch (err) {
-                log.textContent = '發生錯誤：' + err.message;
+                const result = await response.json();
+
+                if (response.ok) {
+                    const newLink = `https://${yourDomain}/${name}`;
+                    showStatus(
+                        `成功！🎉<br>您的短網址: <a href="${newLink}" target="_blank">${newLink}</a>
+                         <button class="copy-btn" onclick="copyToClipboard('${newLink}')">複製</button>`,
+                        'success'
+                    );
+                    form.reset();
+                } else {
+                    showStatus(`建立失敗：${result.message || '未知錯誤'}`, 'error');
+                }
+
+            } catch (error) {
+                showStatus('網路連線錯誤，無法連接至後端服務。', 'error');
+                console.error('Fetch Error:', error);
+            } finally {
+                // 結束載入狀態
+                setLoading(false);
             }
         });
+
+        // 設定載入狀態的函式
+        function setLoading(isLoading) {
+            if (isLoading) {
+                submitBtn.disabled = true;
+                btnText.style.display = 'none';
+                spinner.style.display = 'block';
+            } else {
+                submitBtn.disabled = false;
+                btnText.style.display = 'inline';
+                spinner.style.display = 'none';
+            }
+        }
+
+        // 顯示狀態訊息的函式
+        function showStatus(message, type) {
+            statusDiv.innerHTML = message;
+            statusDiv.className = type;
+            statusDiv.classList.add('show');
+        }
+
+        // 複製到剪貼簿的函式
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const copyBtn = statusDiv.querySelector('.copy-btn');
+                if (copyBtn) {
+                    copyBtn.textContent = '已複製！';
+                    setTimeout(() => { copyBtn.textContent = '複製'; }, 2000);
+                }
+            }).catch(err => {
+                console.error('複製失敗:', err);
+                alert('複製失敗！');
+            });
+        }
     </script>
 </body>
 </html>
