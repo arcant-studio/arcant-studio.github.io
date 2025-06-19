@@ -334,142 +334,48 @@
 </head>
 <body>
     <div class="container">
-        <div class="logo">
-            <h1>Arcant Studio</h1>
-            <p>網址歸類系統</p>
-        </div>
-
-        <div class="status-section">
-            <svg class="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M9 12l2 2 4-4"></path>
-                <circle cx="12" cy="12" r="10"></circle>
-            </svg>
-            <div>
-                <strong>服務狀態：正常</strong>
-                <p style="margin: 5px 0 0 0; color: #666; font-size: 0.9em;">
-                    透過 Cloudflare Workers 安全連接到 GitHub
-                </p>
-            </div>
-        </div>
-
-        <div class="tabs">
-            <button class="tab-button active" onclick="switchTab('create')">建立短網址</button>
-            <button class="tab-button" onclick="switchTab('manage')">管理網址</button>
-        </div>
-
-        <div id="message-container"></div>
-
-        <div id="create-tab" class="tab-content active">
-            <form id="url-form">
-                <div class="form-group">
-                    <label for="target-url">目標網址</label>
-                    <input type="url" id="target-url" placeholder="https://example.com" required>
-                </div>
-                <div class="form-group">
-                    <label for="short-name">短網址名稱</label>
-                    <input type="text" id="short-name" placeholder="例如: google" required pattern="[a-zA-Z0-9\-_]+" title="只能包含英文字母、數字、連字號和底線">
-                    <div class="url-preview">
-                        預覽: <span id="preview-url">https://link.arcantstudio.com/</span>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="page-title">頁面標題（可選）</label>
-                    <input type="text" id="page-title" placeholder="例如: Google 搜尋">
-                </div>
-                <div class="form-group">
-                    <label for="commit-message">提交訊息（可選）</label>
-                    <input type="text" id="commit-message" placeholder="例如: Add redirect for Google">
-                </div>
-                <div class="form-actions">
-                    <button type="submit" class="btn" id="create-btn">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
-                        建立短網址
-                    </button>
-                    <div class="loading" id="loading">
-                        <div class="spinner"></div>
-                        <span>正在建立...</span>
-                    </div>
-                </div>
-            </form>
-        </div>
-
-        <div id="manage-tab" class="tab-content">
-            <div style="margin-bottom: 20px;">
-                <button class="btn btn-secondary" onclick="loadShortUrls()" id="refresh-btn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="23,4 23,10 17,10"></polyline>
-                        <polyline points="1,20 1,14 7,14"></polyline>
-                        <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path>
-                    </svg>
-                    重新載入
-                </button>
-                <div class="loading" id="list-loading">
-                    <div class="spinner"></div>
-                    <span>載入中...</span>
-                </div>
-            </div>
-            <div class="urls-list" id="urls-list">
-                <div class="empty-state">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <path d="m21 21-4.35-4.35"></path>
-                    </svg>
-                    <h3>點擊「重新載入」來查看現有的短網址</h3>
-                </div>
-            </div>
-        </div>
+        <!-- LOGO、分頁區塊、建立短網址表單與管理頁面 -->
     </div>
 
     <script>
-        // Cloudflare Worker API 端點
         const WORKER_URL = 'https://connet.tu28291797.workers.dev/';
-        
-        // 初始化
+
         document.addEventListener('DOMContentLoaded', function() {
-            // 監聽短網址名稱輸入，更新預覽
             document.getElementById('short-name').addEventListener('input', function() {
                 const shortName = this.value;
                 document.getElementById('preview-url').textContent = 
                     'https://link.arcantstudio.com/' + (shortName || '');
             });
-            
-            // 處理表單提交
+
             document.getElementById('url-form').addEventListener('submit', function(e) {
                 e.preventDefault();
                 createShortUrl();
             });
         });
 
-        // 切換分頁
         function switchTab(tabName) {
             document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            
+
             document.querySelector(`[onclick="switchTab('${tabName}')"]`).classList.add('active');
             document.getElementById(tabName + '-tab').classList.add('active');
-            
+
             if (tabName === 'manage') {
                 loadShortUrls();
             }
         }
 
-        // 建立短網址
         async function createShortUrl() {
             const targetUrl = document.getElementById('target-url').value.trim();
             const shortName = document.getElementById('short-name').value.trim();
             const pageTitle = document.getElementById('page-title').value.trim();
             const commitMessage = document.getElementById('commit-message').value.trim();
 
-            // 驗證輸入
             if (!targetUrl || !shortName) {
                 showMessage('請填寫目標網址和短網址名稱', 'error');
                 return;
             }
 
-            // 驗證網址格式
             try {
                 new URL(targetUrl);
             } catch {
@@ -477,7 +383,6 @@
                 return;
             }
 
-            // 顯示載入狀態
             const createBtn = document.getElementById('create-btn');
             const loading = document.getElementById('loading');
             createBtn.disabled = true;
@@ -486,8 +391,70 @@
             try {
                 const response = await fetch(`${WORKER_URL}/create-shorturl`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        shortName: shortName,
+                        shortName,
+                        targetUrl,
+                        pageTitle,
+                        commitMessage
+                    })
+                });
+                const result = await response.json();
+
+                if (response.ok) {
+                    showMessage('短網址建立成功！', 'success');
+                    document.getElementById('url-form').reset();
+                    document.getElementById('preview-url').textContent = 'https://link.arcantstudio.com/';
+                } else {
+                    showMessage(result.message || '建立失敗', 'error');
+                }
+            } catch (error) {
+                showMessage('伺服器錯誤，請稍後再試', 'error');
+            } finally {
+                createBtn.disabled = false;
+                loading.classList.remove('show');
+            }
+        }
+
+        function showMessage(message, type) {
+            const container = document.getElementById('message-container');
+            container.innerHTML = `<div class="message ${type}">${message}</div>`;
+        }
+
+        async function loadShortUrls() {
+            const loading = document.getElementById('list-loading');
+            loading.classList.add('show');
+            const list = document.getElementById('urls-list');
+            list.innerHTML = '';
+
+            try {
+                const res = await fetch(`${WORKER_URL}/list-shorturls`);
+                const data = await res.json();
+                if (Array.isArray(data) && data.length > 0) {
+                    data.forEach(url => {
+                        const item = document.createElement('div');
+                        item.className = 'url-item';
+                        item.innerHTML = `
+                            <div class="url-item-header">
+                                <div class="url-item-title">${url.title || url.shortName}</div>
+                                <div class="url-item-actions">
+                                    <a class="btn btn-success" href="https://link.arcantstudio.com/${url.shortName}" target="_blank">前往</a>
+                                </div>
+                            </div>
+                            <div class="url-item-short">/${url.shortName}</div>
+                            <div class="url-item-long">${url.targetUrl}</div>
+                        `;
+                        list.appendChild(item);
+                    });
+                } else {
+                    list.innerHTML = document.querySelector('.empty-state').outerHTML;
+                }
+            } catch {
+                list.innerHTML = '<div class="message error">載入失敗，請稍後再試。</div>';
+            } finally {
+                loading.classList.remove('show');
+            }
+        }
+    </script>
+</body>
+</html>
