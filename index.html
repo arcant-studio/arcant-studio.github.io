@@ -1,13 +1,30 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Redirect</title>
+    <title>短網址管理系統</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 2rem;
+        }
+        input, button {
+            padding: 0.5rem;
+            margin: 0.5rem 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        #log {
+            margin-top: 1rem;
+            white-space: pre-wrap;
+            background: #f0f0f0;
+            padding: 1rem;
+        }
+    </style>
 </head>
 <body>
     <script>
-        // 獲取 URL 參數
         function getQueryParam(param) {
             let urlParams = new URLSearchParams(window.location.search);
             return urlParams.get(param);
@@ -16,16 +33,94 @@
         let type = getQueryParam('type');
         let url = getQueryParam('url');
 
+        if (url) {
+            if (!type || type === 'url') {
+                window.location.href = url;
+            } else if (type === 'base64') {
+                let decodedUrl = atob(url);
+                window.location.href = decodedUrl;
+            } else {
+                alert("無效的參數！");
+            }
+        }
+    </script>
+
+    <h1>短網址管理系統</h1>
+    <form id="create-form">
+        <label for="name">短網址名稱（例如 test）：</label>
+        <input type="text" id="name" name="name" required>
+
+        <label for="url">目標網址（https://...）：</label>
+        <input type="url" id="url" name="url" required>
+
+        <button type="submit">建立短網址</button>
+    </form>
+
+    <div id="log"></div>
+
+    <hr>
+
+    <h2>自動跳轉腳本範例</h2>
+    <p>你可以使用這段 HTML 來做自動跳轉（支援 URL 或 base64）：</p>
+    <textarea rows="10" style="width: 100%;">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirect</title>
+</head>
+<body>
+    <script>
+        function getQueryParam(param) {
+            let urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+        let type = getQueryParam('type');
+        let url = getQueryParam('url');
         if (!type || type === 'url') {
-            // 如果沒有 type 或 type 是 url，直接跳轉
             window.location.href = url;
         } else if (type === 'base64') {
-            // 如果是 base64，解碼後跳轉
             let decodedUrl = atob(url);
             window.location.href = decodedUrl;
         } else {
             alert("無效的參數！");
         }
+    </script>
+</body>
+</html>
+    </textarea>
+
+    <script>
+        const form = document.getElementById('create-form');
+        const log = document.getElementById('log');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const name = form.name.value.trim();
+            const targetUrl = form.url.value.trim();
+
+            if (!name || !targetUrl) {
+                log.textContent = '請填寫所有欄位';
+                return;
+            }
+
+            log.textContent = '正在建立短網址...';
+
+            try {
+                const res = await fetch('https://你的-worker-url.workers.dev', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, targetUrl })
+                });
+
+                const text = await res.text();
+                log.textContent = text;
+            } catch (err) {
+                log.textContent = '發生錯誤：' + err.message;
+            }
+        });
     </script>
 </body>
 </html>
