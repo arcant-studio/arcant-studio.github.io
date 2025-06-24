@@ -1,370 +1,491 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Arcant Link | 短網址產生器</title>
-  <style>
-    :root {
-      --primary-color: #6a11cb;
-      --secondary-color: #2575fc;
-      --card-bg-color: rgba(255, 255, 255, 0.95);
-      --text-color: #333;
-      --text-light-color: #555;
-      --border-color: #ddd;
-      --success-color: #28a745;
-      --error-color: #dc3545;
-      --shadow-color: rgba(0, 0, 0, 0.1);
-      --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    }
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      font-family: var(--font-family);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-      color: var(--text-color);
-      padding: 1rem;
-    }
-    .container {
-      width: 100%;
-      max-width: 550px;
-      background: var(--card-bg-color);
-      padding: 2.5rem 3rem;
-      border-radius: 16px;
-      box-shadow: 0 10px 30px var(--shadow-color);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      text-align: center;
-      transition: all 0.3s ease;
-    }
-    @media (max-width: 600px) {
-      .container {
-        padding: 2rem 1.5rem;
-      }
-    }
-    .header {
-      margin-bottom: 2rem;
-    }
-    .header h1 {
-      font-size: 2.5rem;
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-    }
-    .header p {
-      font-size: 1rem;
-      color: var(--text-light-color);
-    }
-    .form-group {
-      margin-bottom: 1.5rem;
-      text-align: left;
-    }
-    label {
-      display: block;
-      margin-bottom: 0.5rem;
-      color: var(--text-light-color);
-      font-weight: 600;
-      font-size: 0.9rem;
-    }
-    .input-group {
-      display: flex;
-      align-items: center;
-    }
-    .input-group-text {
-      padding: 0.75rem;
-      background-color: #f0f0f0;
-      border: 1px solid var(--border-color);
-      border-right: none;
-      border-radius: 8px 0 0 8px;
-      color: var(--text-light-color);
-      font-size: 0.9rem;
-      white-space: nowrap;
-    }
-    input[type="text"],
-    input[type="url"] {
-      width: 100%;
-      padding: 0.75rem;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      font-size: 1rem;
-      font-family: inherit;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .input-group input {
-      border-radius: 0 8px 8px 0;
-    }
-    input:focus {
-      outline: none;
-      border-color: var(--secondary-color);
-      box-shadow: 0 0 0 3px rgba(37, 117, 252, 0.2);
-    }
-    button {
-      width: 100%;
-      padding: 0.8rem;
-      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 1.1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    button:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-    }
-    button:disabled {
-      background: #aab8c2;
-      cursor: not-allowed;
-    }
-    .spinner {
-      width: 20px;
-      height: 20px;
-      border: 3px solid rgba(255, 255, 255, 0.3);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-    #status {
-      margin-top: 1.5rem;
-      padding: 1rem;
-      border-radius: 8px;
-      font-weight: 500;
-      display: none;
-      opacity: 0;
-      transition: opacity 0.5s;
-    }
-    #status.show {
-      display: block;
-      opacity: 1;
-    }
-    #status.success {
-      background-color: rgba(40, 167, 69, 0.1);
-      color: var(--success-color);
-      border: 1px solid rgba(40, 167, 69, 0.2);
-    }
-    #status.error {
-      background-color: rgba(220, 53, 69, 0.1);
-      color: var(--error-color);
-      border: 1px solid rgba(220, 53, 69, 0.2);
-    }
-    #status a {
-      color: var(--primary-color);
-      text-decoration: none;
-      font-weight: 600;
-    }
-    #status a:hover {
-      text-decoration: underline;
-    }
-    .copy-btn {
-      background: none;
-      border: 1px solid var(--border-color);
-      color: var(--text-light-color);
-      padding: 0.2rem 0.5rem;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 0.8rem;
-      margin-left: 0.5rem;
-    }
-    .copy-btn:hover {
-      background-color: #f0f0f0;
-    }
-    #linkListContainer {
-      margin-top: 2rem;
-    }
-    #linkList {
-      text-align: left;
-      background: var(--card-bg-color);
-      padding: 1rem 1.5rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 16px var(--shadow-color);
-      border: 1px solid var(--border-color);
-      max-height: 350px;
-      overflow-y: auto;
-    }
-    #linkList ul {
-      list-style: none;
-      padding-left: 0;
-    }
-    #linkList li {
-      margin-bottom: 0.75rem;
-      line-height: 1.4;
-    }
-    #linkList a {
-      color: var(--primary-color);
-      text-decoration: none;
-      font-weight: 500;
-    }
-    #linkList a:hover {
-      text-decoration: underline;
-    }
-    footer {
-      margin-top: 2rem;
-      color: #fff;
-      opacity: 0.8;
-      font-size: 0.85rem;
-    }
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Arcant Link | 短網址產生器</title>
+    <style>
+        :root {
+            --primary-color: #6a11cb;
+            --secondary-color: #2575fc;
+            --card-bg-color: rgba(255, 255, 255, 0.95);
+            --text-color: #333;
+            --text-light-color: #555;
+            --border-color: #ddd;
+            --success-color: #28a745;
+            --error-color: #dc3545;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: var(--font-family);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: var(--text-color);
+            padding: 1rem;
+        }
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background: var(--card-bg-color);
+            padding: 2.5rem 3rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+            transition: all 0.3s ease;
+            margin-bottom: 2rem;
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 2rem 1.5rem;
+            }
+        }
+        .header {
+            margin-bottom: 2rem;
+        }
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .header p {
+            font-size: 1rem;
+            color: var(--text-light-color);
+        }
+        form .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-light-color);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .input-group {
+            display: flex;
+            align-items: center;
+        }
+        .input-group-text {
+            padding: 0.75rem;
+            background-color: #f0f0f0;
+            border: 1px solid var(--border-color);
+            border-right: none;
+            border-radius: 8px 0 0 8px;
+            color: var(--text-light-color);
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+        input[type="text"],
+        input[type="url"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .input-group input {
+            border-radius: 0 8px 8px 0;
+        }
+        input:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(37, 117, 252, 0.2);
+        }
+        button {
+            width: 100%;
+            padding: 0.8rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+        button:disabled {
+            background: #aab8c2;
+            cursor: not-allowed;
+        }
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        #status {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        #status.show {
+            display: block;
+            opacity: 1;
+        }
+        #status.success {
+            background-color: rgba(40, 167, 69, 0.1);
+            color: var(--success-color);
+            border: 1px solid rgba(40, 167, 69, 0.2);
+        }
+        #status.error {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: var(--error-color);
+            border: 1px solid rgba(220, 53, 69, 0.2);
+        }
+        #status a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        #status a:hover {
+            text-decoration: underline;
+        }
+        .copy-btn,
+        .delete-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-light-color);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-left: 0.5rem;
+            min-width: 50px;
+            text-align: center;
+        }
+        .copy-btn:hover,
+        .delete-btn:hover {
+            background-color: #f0f0f0;
+        }
+
+        /* 短網址列表容器 */
+        #linksList {
+            margin-top: 1rem;
+            text-align: left;
+        }
+
+        /* 每個短網址項目 */
+        .link-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.6rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 0.8rem;
+            background-color: #fff;
+            box-shadow: 0 2px 5px var(--shadow-color);
+            flex-wrap: wrap;
+        }
+
+        /* 左半部分：連結文字 */
+        .link-info {
+            flex: 1 1 auto;
+            word-break: break-word;
+        }
+
+        /* 右半部分：按鈕群 */
+        .link-actions {
+            display: flex;
+            flex: 0 0 auto;
+            margin-left: 1rem;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        /* 響應式：手機版垂直排列按鈕和文字 */
+        @media (max-width: 600px) {
+            .link-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .link-actions {
+                margin-left: 0;
+                margin-top: 0.5rem;
+                width: 100%;
+                justify-content: flex-start;
+                gap: 0.5rem;
+            }
+            .copy-btn,
+            .delete-btn {
+                flex: 1 1 auto;
+                min-width: auto;
+            }
+        }
+
+        /* 頁腳 arcantstudio 標示 */
+        footer {
+            font-size: 0.9rem;
+            color: var(--text-light-color);
+            margin-top: 2rem;
+            user-select: none;
+            text-align: center;
+            opacity: 0.7;
+        }
+        footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>Link Shortener</h1>
-      <p>一個基於 GitHub & Cloudflare 的極速短網址服務</p>
-    </div>
-    <form id="linkForm">
-      <div class="form-group">
-        <label for="url">目標網址</label>
-        <input type="url" id="url" name="url" placeholder="https://www.google.com/" required />
-      </div>
-      <div class="form-group">
-        <label for="name">自訂短路徑</label>
-        <div class="input-group">
-          <span class="input-group-text" id="domain-prefix"></span>
-          <input type="text" id="name" name="name" placeholder="my-awesome-link" required pattern="[a-zA-Z0-9_-]+" />
+    <div class="container">
+        <div class="header">
+            <h1>Link Shortener</h1>
+            <p>一個基於 GitHub & Cloudflare 的極速短網址服務</p>
         </div>
-      </div>
-      <button type="submit" id="submitBtn">
-        <span id="btn-text">產生短網址</span>
-        <div class="spinner" id="spinner" style="display: none;"></div>
-      </button>
-    </form>
-    <div id="status"></div>
-  </div>
 
-  <!-- 📄 短網址清單 -->
-  <div class="container" id="linkListContainer">
-    <h2 style="margin-bottom: 1rem;">📄 目前短網址清單</h2>
-    <div id="linkList">載入中...</div>
-  </div>
+        <form id="linkForm">
+            <div class="form-group">
+                <label for="url">目標網址</label>
+                <input type="url" id="url" name="url" placeholder="https://www.google.com/" required />
+            </div>
+            <div class="form-group">
+                <label for="name">自訂短路徑</label>
+                <div class="input-group">
+                    <span class="input-group-text" id="domain-prefix"></span>
+                    <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        placeholder="my-awesome-link"
+                        required
+                        pattern="[a-zA-Z0-9_-]+"
+                    />
+                </div>
+            </div>
+            <button type="submit" id="submitBtn">
+                <span id="btn-text">產生短網址</span>
+                <div class="spinner" id="spinner" style="display: none;"></div>
+            </button>
+        </form>
 
-  <!-- 👣 頁腳 -->
-  <footer>
-    © 2025 <strong>Arcant Studio</strong> | Powered by GitHub & Cloudflare
-  </footer>
+        <div id="status"></div>
+    </div>
 
-  <script>
-    const yourWorkerUrl = 'https://connet.tu28291797.workers.dev/';
-    const yourDomain = 'link.arcantstudio.com';
+    <div class="container" style="max-width: 700px;">
+        <h2 style="margin-bottom: 1rem; text-align: left;">目前短網址列表</h2>
+        <div id="linksList" aria-live="polite" aria-atomic="true"></div>
+    </div>
 
-    const form = document.getElementById('linkForm');
-    const statusDiv = document.getElementById('status');
-    const submitBtn = document.getElementById('submitBtn');
-    const btnText = document.getElementById('btn-text');
-    const spinner = document.getElementById('spinner');
-    const domainPrefix = document.getElementById('domain-prefix');
+    <footer>
+        由 <a href="https://arcantstudio.com" target="_blank" rel="noopener noreferrer">Arcant Studio</a> 提供技術支持
+    </footer>
 
-    domainPrefix.textContent = `https://${yourDomain}/`;
+    <script>
+        const yourWorkerUrl = 'https://connet.tu28291797.workers.dev/';
+        const yourDomain = 'link.arcantstudio.com';
 
-    form.addEventListener('submit', async function (event) {
-      event.preventDefault();
+        const form = document.getElementById('linkForm');
+        const statusDiv = document.getElementById('status');
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btn-text');
+        const spinner = document.getElementById('spinner');
+        const domainPrefix = document.getElementById('domain-prefix');
+        const linksList = document.getElementById('linksList');
 
-      const url = document.getElementById('url').value;
-      const name = document.getElementById('name').value;
+        domainPrefix.textContent = `https://${yourDomain}/`;
 
-      if (!url || !name) {
-        showStatus('請填寫所有欄位！', 'error');
-        return;
-      }
+        // 顯示狀態訊息
+        function showStatus(message, type) {
+            statusDiv.innerHTML = message;
+            statusDiv.className = type;
+            statusDiv.classList.add('show');
+        }
 
-      setLoading(true);
+        // 載入狀態
+        function setLoading(isLoading) {
+            if (isLoading) {
+                submitBtn.disabled = true;
+                btnText.style.display = 'none';
+                spinner.style.display = 'block';
+            } else {
+                submitBtn.disabled = false;
+                btnText.style.display = 'inline';
+                spinner.style.display = 'none';
+            }
+        }
 
-      try {
-        const response = await fetch(yourWorkerUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, url }),
+        // 複製功能
+        function copyToClipboard(text, btn) {
+            navigator.clipboard
+                .writeText(text)
+                .then(() => {
+                    btn.textContent = '已複製！';
+                    setTimeout(() => {
+                        btn.textContent = '複製';
+                    }, 2000);
+                })
+                .catch(() => alert('複製失敗！'));
+        }
+
+        // 刪除功能
+        async function deleteLink(name, itemElement) {
+            if (!confirm(`確定要刪除短網址 "${name}" 嗎？`)) return;
+
+            try {
+                const resp = await fetch(yourWorkerUrl, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name }),
+                });
+
+                const data = await resp.json();
+
+                if (resp.ok && data.success) {
+                    showStatus(`刪除成功！短網址 "${name}" 已移除。`, 'success');
+                    itemElement.remove();
+                } else {
+                    showStatus(`刪除失敗：${data.message || '未知錯誤'}`, 'error');
+                }
+            } catch (error) {
+                showStatus('網路錯誤，無法刪除。', 'error');
+                console.error('Delete Error:', error);
+            }
+        }
+
+        // 取得並顯示短網址列表
+        async function loadLinks() {
+            linksList.innerHTML = '載入中...';
+            try {
+                const resp = await fetch(`${yourWorkerUrl}?list=1`);
+                const data = await resp.json();
+
+                if (!Array.isArray(data)) {
+                    linksList.innerHTML = '<p>無法取得短網址列表</p>';
+                    return;
+                }
+
+                if (data.length === 0) {
+                    linksList.innerHTML = '<p>目前尚無任何短網址</p>';
+                    return;
+                }
+
+                linksList.innerHTML = '';
+
+                data.forEach((link) => {
+                    const item = document.createElement('div');
+                    item.className = 'link-item';
+
+                    // 連結顯示區
+                    const info = document.createElement('div');
+                    info.className = 'link-info';
+                    info.innerHTML = `<a href="${link.url}" target="_blank" rel="noopener noreferrer">${link.url}</a>`;
+
+                    // 按鈕區
+                    const actions = document.createElement('div');
+                    actions.className = 'link-actions';
+
+                    // 複製按鈕
+                    const copyBtn = document.createElement('button');
+                    copyBtn.className = 'copy-btn';
+                    copyBtn.textContent = '複製';
+                    copyBtn.type = 'button';
+                    copyBtn.addEventListener('click', () => copyToClipboard(link.url, copyBtn));
+
+                    // 刪除按鈕
+                    const delBtn = document.createElement('button');
+                    delBtn.className = 'delete-btn';
+                    delBtn.textContent = '刪除';
+                    delBtn.type = 'button';
+                    delBtn.addEventListener('click', () => deleteLink(link.name, item));
+
+                    actions.appendChild(copyBtn);
+                    actions.appendChild(delBtn);
+
+                    item.appendChild(info);
+                    item.appendChild(actions);
+
+                    linksList.appendChild(item);
+                });
+            } catch (error) {
+                linksList.innerHTML = '<p>載入短網址列表時發生錯誤</p>';
+                console.error('Load Links Error:', error);
+            }
+        }
+
+        // 表單送出事件
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const url = form.url.value.trim();
+            const name = form.name.value.trim();
+
+            if (!url || !name) {
+                showStatus('請填寫所有欄位！', 'error');
+                return;
+            }
+
+            setLoading(true);
+            showStatus('', '');
+
+            try {
+                const response = await fetch(yourWorkerUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, url }),
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    const newLink = `https://${yourDomain}/${name}`;
+                    showStatus(
+                        `成功！🎉<br>您的短網址: <a href="${newLink}" target="_blank">${newLink}</a>`,
+                        'success'
+                    );
+                    form.reset();
+                    await loadLinks();
+                } else {
+                    showStatus(`建立失敗：${result.message || '未知錯誤'}`, 'error');
+                }
+            } catch (error) {
+                showStatus('網路連線錯誤，無法連接至後端服務。', 'error');
+                console.error('Fetch Error:', error);
+            } finally {
+                setLoading(false);
+            }
         });
 
-        const result = await response.json();
-
-        if (response.ok) {
-          const newLink = `https://${yourDomain}/${name}`;
-          showStatus(
-            `成功！🎉<br>您的短網址: <a href="${newLink}" target="_blank">${newLink}</a>
-            <button class="copy-btn" onclick="copyToClipboard('${newLink}')">複製</button>`,
-            'success'
-          );
-          form.reset();
-          loadLinkList(); // 重新載入清單
-        } else {
-          showStatus(`建立失敗：${result.message || '未知錯誤'}`, 'error');
-        }
-      } catch (error) {
-        showStatus('網路連線錯誤，無法連接至後端服務。', 'error');
-        console.error('Fetch Error:', error);
-      } finally {
-        setLoading(false);
-      }
-    });
-
-    function setLoading(isLoading) {
-      submitBtn.disabled = isLoading;
-      btnText.style.display = isLoading ? 'none' : 'inline';
-      spinner.style.display = isLoading ? 'block' : 'none';
-    }
-
-    function showStatus(message, type) {
-      statusDiv.innerHTML = message;
-      statusDiv.className = type;
-      statusDiv.classList.add('show');
-    }
-
-    function copyToClipboard(text) {
-      navigator.clipboard.writeText(text).then(() => {
-        const copyBtn = statusDiv.querySelector('.copy-btn');
-        if (copyBtn) {
-          copyBtn.textContent = '已複製！';
-          setTimeout(() => { copyBtn.textContent = '複製'; }, 2000);
-        }
-      }).catch(err => {
-        console.error('複製失敗:', err);
-        alert('複製失敗！');
-      });
-    }
-
-    async function loadLinkList() {
-      const linkListDiv = document.getElementById('linkList');
-      try {
-        const res = await fetch(yourWorkerUrl + '?list');
-        const links = await res.json();
-
-        if (Array.isArray(links) && links.length > 0) {
-          const ul = document.createElement('ul');
-          for (const link of links) {
-            const li = document.createElement('li');
-            li.innerHTML = `<strong>${link.name}</strong> ➜ 
-              <a href="${link.url}" target="_blank">${link.url}</a>`;
-            ul.appendChild(li);
-          }
-          linkListDiv.innerHTML = '';
-          linkListDiv.appendChild(ul);
-        } else {
-          linkListDiv.textContent = '尚未建立任何短網址。';
-        }
-      } catch (err) {
-        console.error('載入列表失敗:', err);
-        linkListDiv.textContent = '⚠️ 無法取得短網址清單。';
-      }
-    }
-
-    window.addEventListener('DOMContentLoaded', loadLinkList);
-  </script>
+        // 初始化載入列表
+        loadLinks();
+    </script>
 </body>
 </html>
