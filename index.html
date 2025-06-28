@@ -1,41 +1,55 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Arcant Link | 短網址產生器</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arcant Link | 短網址系統</title>
     <style>
+        /* CSS 變數 */
         :root {
             --primary-color: #6a11cb;
             --secondary-color: #2575fc;
-            --card-bg-color: rgba(255, 255, 255, 0.95);
+            --card-bg-color: rgba(255, 255, 255, 0.98);
             --text-color: #333;
             --text-light-color: #555;
-            --border-color: #ddd;
+            --border-color: #e0e0e0;
             --success-color: #28a745;
             --error-color: #dc3545;
             --shadow-color: rgba(0, 0, 0, 0.1);
             --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
+
+        /* 全域樣式 */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+
         body {
             font-family: var(--font-family);
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
             min-height: 100vh;
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             color: var(--text-color);
             padding: 1rem;
         }
+        
+        #redirect-message {
+            color: white;
+            text-align: center;
+        }
+        #redirect-message h1 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        /* 主容器 */
         .container {
             width: 100%;
-            max-width: 700px;
+            max-width: 600px;
             background: var(--card-bg-color);
             padding: 2.5rem 3rem;
             border-radius: 16px;
@@ -44,13 +58,15 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
             text-align: center;
             transition: all 0.3s ease;
-            margin-bottom: 2rem;
+            margin-bottom: 2rem; /* [新增] 和下方的列表間隔 */
         }
+
         @media (max-width: 600px) {
             .container {
                 padding: 2rem 1.5rem;
             }
         }
+        
         .header {
             margin-bottom: 2rem;
         }
@@ -63,7 +79,8 @@
             font-size: 1rem;
             color: var(--text-light-color);
         }
-        form .form-group {
+
+        .form-group {
             margin-bottom: 1.5rem;
             text-align: left;
         }
@@ -88,8 +105,7 @@
             font-size: 0.9rem;
             white-space: nowrap;
         }
-        input[type="text"],
-        input[type="url"] {
+        input[type="text"], input[type="url"] {
             width: 100%;
             padding: 0.75rem;
             border: 1px solid var(--border-color);
@@ -106,6 +122,8 @@
             border-color: var(--secondary-color);
             box-shadow: 0 0 0 3px rgba(37, 117, 252, 0.2);
         }
+        
+        /* 按鈕樣式 */
         button {
             width: 100%;
             padding: 0.8rem;
@@ -137,11 +155,9 @@
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* 狀態訊息 */
         #status {
             margin-top: 1.5rem;
             padding: 1rem;
@@ -167,105 +183,59 @@
         }
         #status a {
             color: var(--primary-color);
-            text-decoration: none;
             font-weight: 600;
         }
-        #status a:hover {
-            text-decoration: underline;
+
+        /* [新增] 連結列表樣式 */
+        #links-list-container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--card-bg-color);
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px var(--shadow-color);
         }
-        .copy-btn,
-        .delete-btn {
-            background: none;
-            border: 1px solid var(--border-color);
-            color: var(--text-light-color);
-            padding: 0.2rem 0.5rem;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            margin-left: 0.5rem;
-            min-width: 50px;
+        #links-list-container h2 {
             text-align: center;
+            margin-bottom: 1.5rem;
+            color: var(--text-color);
         }
-        .copy-btn:hover,
-        .delete-btn:hover {
-            background-color: #f0f0f0;
+        #links-list {
+            list-style: none;
+            padding: 0;
         }
-
-        /* 短網址列表容器 */
-        #linksList {
-            margin-top: 1rem;
-            text-align: left;
-        }
-
-        /* 每個短網址項目 */
-        .link-item {
+        #links-list li {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.6rem 1rem;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            margin-bottom: 0.8rem;
-            background-color: #fff;
-            box-shadow: 0 2px 5px var(--shadow-color);
-            flex-wrap: wrap;
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
         }
-
-        /* 左半部分：連結文字 */
-        .link-info {
-            flex: 1 1 auto;
-            word-break: break-word;
+        #links-list li:last-child {
+            border-bottom: none;
         }
-
-        /* 右半部分：按鈕群 */
-        .link-actions {
-            display: flex;
-            flex: 0 0 auto;
-            margin-left: 1rem;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-
-        /* 響應式：手機版垂直排列按鈕和文字 */
-        @media (max-width: 600px) {
-            .link-item {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            .link-actions {
-                margin-left: 0;
-                margin-top: 0.5rem;
-                width: 100%;
-                justify-content: flex-start;
-                gap: 0.5rem;
-            }
-            .copy-btn,
-            .delete-btn {
-                flex: 1 1 auto;
-                min-width: auto;
-            }
-        }
-
-        /* 頁腳 arcantstudio 標示 */
-        footer {
-            font-size: 0.9rem;
-            color: var(--text-light-color);
-            margin-top: 2rem;
-            user-select: none;
-            text-align: center;
-            opacity: 0.7;
-        }
-        footer a {
-            color: var(--primary-color);
+        #links-list a {
+            color: var(--secondary-color);
             text-decoration: none;
-            font-weight: 600;
+            font-weight: 500;
+            word-break: break-all;
         }
-        footer a:hover {
+        #links-list a:hover {
             text-decoration: underline;
+        }
+        .list-spinner {
+            display: block;
+            margin: 2rem auto;
         }
     </style>
 </head>
 <body>
+
+    <div id="redirect-message" style="display: none;">
+        <h1>正在重新導向...</h1>
+        <p>請稍候，我們正在帶您前往目的地。</p>
+    </div>
+    
     <div class="container">
         <div class="header">
             <h1>Link Shortener</h1>
@@ -275,20 +245,13 @@
         <form id="linkForm">
             <div class="form-group">
                 <label for="url">目標網址</label>
-                <input type="url" id="url" name="url" placeholder="https://www.google.com/" required />
+                <input type="url" id="url" name="url" placeholder="https://www.google.com/" required>
             </div>
             <div class="form-group">
                 <label for="name">自訂短路徑</label>
                 <div class="input-group">
                     <span class="input-group-text" id="domain-prefix"></span>
-                    <input
-                        type="text"
-                        id="name"
-                        name="name"
-                        placeholder="my-awesome-link"
-                        required
-                        pattern="[a-zA-Z0-9_-]+"
-                    />
+                    <input type="text" id="name" name="name" placeholder="my-awesome-link" required pattern="[a-zA-Z0-9_-]+">
                 </div>
             </div>
             <button type="submit" id="submitBtn">
@@ -300,153 +263,119 @@
         <div id="status"></div>
     </div>
 
-    <div class="container" style="max-width: 700px;">
-        <h2 style="margin-bottom: 1rem; text-align: left;">目前短網址列表</h2>
-        <div id="linksList" aria-live="polite" aria-atomic="true"></div>
+    <!-- [新增] 顯示已建立連結的列表容器 -->
+    <div id="links-list-container">
+        <h2>已建立的短網址</h2>
+        <ul id="links-list">
+            <!-- 載入動畫會顯示在這裡 -->
+        </ul>
     </div>
 
-    <footer>
-        由 <a href="https://arcantstudio.com" target="_blank" rel="noopener noreferrer">Arcant Studio</a> 提供技術支持
-    </footer>
-
     <script>
-        const yourWorkerUrl = 'https://connet.tu28291797.workers.dev/';
+        // --- ⚙️ 設定 ---
+        const yourWorkerUrl = 'https://connet.tu28291797.workers.dev';
         const yourDomain = 'link.arcantstudio.com';
+        // ------------------
 
+        // [修改] 將所有 DOM 元素選擇器放在頂部
+        const generatorContainer = document.querySelector('.container');
+        const redirectMessage = document.getElementById('redirect-message');
         const form = document.getElementById('linkForm');
         const statusDiv = document.getElementById('status');
         const submitBtn = document.getElementById('submitBtn');
         const btnText = document.getElementById('btn-text');
         const spinner = document.getElementById('spinner');
         const domainPrefix = document.getElementById('domain-prefix');
-        const linksList = document.getElementById('linksList');
+        const linksList = document.getElementById('links-list');
+        const linksListContainer = document.getElementById('links-list-container');
 
-        domainPrefix.textContent = `https://${yourDomain}/`;
-
-        // 顯示狀態訊息
-        function showStatus(message, type) {
-            statusDiv.innerHTML = message;
-            statusDiv.className = type;
-            statusDiv.classList.add('show');
-        }
-
-        // 載入狀態
-        function setLoading(isLoading) {
-            if (isLoading) {
-                submitBtn.disabled = true;
-                btnText.style.display = 'none';
-                spinner.style.display = 'block';
+        // 頁面載入時的主要邏輯
+        (function main() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('url')) {
+                handleRedirect(params);
             } else {
-                submitBtn.disabled = false;
-                btnText.style.display = 'inline';
-                spinner.style.display = 'none';
+                // 如果不是跳轉模式，就初始化管理介面
+                initializeAdminPanel();
             }
-        }
+        })();
 
-        // 複製功能
-        function copyToClipboard(text, btn) {
-            navigator.clipboard
-                .writeText(text)
-                .then(() => {
-                    btn.textContent = '已複製！';
-                    setTimeout(() => {
-                        btn.textContent = '複製';
-                    }, 2000);
-                })
-                .catch(() => alert('複製失敗！'));
-        }
+        // 處理跳轉的函式
+        function handleRedirect(params) {
+            const urlToRedirect = params.get('url');
+            const type = params.get('type');
 
-        // 刪除功能
-        async function deleteLink(name, itemElement) {
-            if (!confirm(`確定要刪除短網址 "${name}" 嗎？`)) return;
+            if (generatorContainer) generatorContainer.style.display = 'none';
+            if (linksListContainer) linksListContainer.style.display = 'none'; // 隱藏列表
+            if (redirectMessage) redirectMessage.style.display = 'block';
 
-            try {
-                const resp = await fetch(yourWorkerUrl, {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name }),
-                });
-
-                const data = await resp.json();
-
-                if (resp.ok && data.success) {
-                    showStatus(`刪除成功！短網址 "${name}" 已移除。`, 'success');
-                    itemElement.remove();
-                } else {
-                    showStatus(`刪除失敗：${data.message || '未知錯誤'}`, 'error');
+            let targetUrl = '';
+            if (type === 'base64') {
+                try {
+                    targetUrl = atob(urlToRedirect);
+                } catch (e) {
+                    document.body.innerHTML = '<h1>錯誤：無效的 Base64 編碼。</h1>';
+                    return;
                 }
-            } catch (error) {
-                showStatus('網路錯誤，無法刪除。', 'error');
-                console.error('Delete Error:', error);
+            } else {
+                targetUrl = urlToRedirect;
+            }
+
+            if (targetUrl) {
+                window.location.replace(targetUrl);
+            } else {
+                document.body.innerHTML = '<h1>錯誤：目標網址無效。</h1>';
             }
         }
+        
+        // 初始化管理介面的函式
+        function initializeAdminPanel() {
+            if (domainPrefix) {
+                domainPrefix.textContent = `https://` + yourDomain + '/';
+            }
 
-        // 取得並顯示短網址列表
+            if (form) {
+                form.addEventListener('submit', handleFormSubmit);
+            }
+            
+            // [新增] 載入已有的連結列表
+            loadLinks();
+        }
+
+        // [新增] 載入連結列表的函式
         async function loadLinks() {
-            linksList.innerHTML = '載入中...';
+            if (!linksList) return;
+            linksList.innerHTML = '<li><div class="spinner list-spinner"></div></li>'; // 顯示載入動畫
+
             try {
-                const resp = await fetch(`${yourWorkerUrl}?list=1`);
-                const data = await resp.json();
-
-                if (!Array.isArray(data)) {
-                    linksList.innerHTML = '<p>無法取得短網址列表</p>';
-                    return;
+                const response = await fetch(yourWorkerUrl, { method: 'GET' });
+                if (!response.ok) {
+                    throw new Error(`伺服器錯誤: ${response.status}`);
                 }
-
-                if (data.length === 0) {
-                    linksList.innerHTML = '<p>目前尚無任何短網址</p>';
-                    return;
+                const links = await response.json();
+                
+                linksList.innerHTML = ''; // 清空載入動畫
+                if (links.length === 0) {
+                    linksList.innerHTML = '<li>尚無任何短網址。</li>';
+                } else {
+                    links.forEach(linkName => {
+                        const li = document.createElement('li');
+                        const linkUrl = `https://${yourDomain}/${linkName}`;
+                        li.innerHTML = `<a href="${linkUrl}" target="_blank">${linkUrl}</a>`;
+                        linksList.appendChild(li);
+                    });
                 }
-
-                linksList.innerHTML = '';
-
-                data.forEach((link) => {
-                    const item = document.createElement('div');
-                    item.className = 'link-item';
-
-                    // 連結顯示區
-                    const info = document.createElement('div');
-                    info.className = 'link-info';
-                    info.innerHTML = `<a href="${link.url}" target="_blank" rel="noopener noreferrer">${link.url}</a>`;
-
-                    // 按鈕區
-                    const actions = document.createElement('div');
-                    actions.className = 'link-actions';
-
-                    // 複製按鈕
-                    const copyBtn = document.createElement('button');
-                    copyBtn.className = 'copy-btn';
-                    copyBtn.textContent = '複製';
-                    copyBtn.type = 'button';
-                    copyBtn.addEventListener('click', () => copyToClipboard(link.url, copyBtn));
-
-                    // 刪除按鈕
-                    const delBtn = document.createElement('button');
-                    delBtn.className = 'delete-btn';
-                    delBtn.textContent = '刪除';
-                    delBtn.type = 'button';
-                    delBtn.addEventListener('click', () => deleteLink(link.name, item));
-
-                    actions.appendChild(copyBtn);
-                    actions.appendChild(delBtn);
-
-                    item.appendChild(info);
-                    item.appendChild(actions);
-
-                    linksList.appendChild(item);
-                });
             } catch (error) {
-                linksList.innerHTML = '<p>載入短網址列表時發生錯誤</p>';
-                console.error('Load Links Error:', error);
+                console.error('載入列表失敗:', error);
+                linksList.innerHTML = `<li>無法載入列表: ${error.message}</li>`;
             }
         }
 
-        // 表單送出事件
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const url = form.url.value.trim();
-            const name = form.name.value.trim();
+        // 表單提交處理函式
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+            const url = document.getElementById('url').value;
+            const name = document.getElementById('name').value;
 
             if (!url || !name) {
                 showStatus('請填寫所有欄位！', 'error');
@@ -454,38 +383,55 @@
             }
 
             setLoading(true);
-            showStatus('', '');
 
             try {
                 const response = await fetch(yourWorkerUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, url }),
+                    body: JSON.stringify({ name, url })
                 });
 
                 const result = await response.json();
 
-                if (response.ok && result.success) {
+                if (response.ok) {
                     const newLink = `https://${yourDomain}/${name}`;
                     showStatus(
                         `成功！🎉<br>您的短網址: <a href="${newLink}" target="_blank">${newLink}</a>`,
                         'success'
                     );
                     form.reset();
-                    await loadLinks();
+                    await loadLinks(); // [新增] 成功後重新整理列表
                 } else {
                     showStatus(`建立失敗：${result.message || '未知錯誤'}`, 'error');
                 }
+
             } catch (error) {
                 showStatus('網路連線錯誤，無法連接至後端服務。', 'error');
                 console.error('Fetch Error:', error);
             } finally {
                 setLoading(false);
             }
-        });
+        }
 
-        // 初始化載入列表
-        loadLinks();
+        function setLoading(isLoading) {
+            if (submitBtn) {
+                submitBtn.disabled = isLoading;
+                btnText.style.display = isLoading ? 'none' : 'inline';
+                spinner.style.display = isLoading ? 'block' : 'none';
+            }
+        }
+
+        function showStatus(message, type) {
+            if (statusDiv) {
+                if (!message) {
+                    statusDiv.classList.remove('show');
+                    return;
+                }
+                statusDiv.innerHTML = message;
+                statusDiv.className = type;
+                statusDiv.classList.add('show');
+            }
+        }
     </script>
 </body>
 </html>
