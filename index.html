@@ -251,15 +251,24 @@
         footer a:hover {
             text-decoration: underline;
         }
+        .g_id_signin {
+            margin-top: 2rem;
+            display: flex;
+            justify-content: center;
+        }
     </style>
 </head>
 <body>
-    <!-- 內容將由 JavaScript 動態決定 -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 
     <script>
         // --- ⚙️ 全域設定 ---
         const yourWorkerUrl = 'https://connet.tu28291797.workers.dev/';
         const yourDomain = 'link.arcantstudio.com';
+        // IMPORTANT: Replace with your actual Google Client ID
+        const googleClientId = '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'; 
+
+        let googleIdToken = null; // Store the ID token after successful login
 
         // --- 🚀 頁面啟動邏輯 ---
         // 頁面載入後，立即判斷是要跳轉還是顯示後台
@@ -269,9 +278,8 @@
                 // 模式一：URL跳轉
                 handleRedirect(params);
             } else {
-                // 模式二：顯示後台管理介面
-                renderAdminPanel();
-                initializeAdminLogic();
+                // 模式二：顯示登入介面
+                renderLoginPanel();
             }
         });
 
@@ -301,6 +309,79 @@
                 document.body.innerHTML = '<h1>錯誤：目標網址無效。</h1>';
             }
         }
+
+        // --- 登入介面相關函式 ---
+        function renderLoginPanel() {
+            document.body.innerHTML = `
+                <div class="container">
+                    <div class="header">
+                        <h1>Link Shortener 管理</h1>
+                        <p>請使用您的 Google 帳號登入以管理短網址。</p>
+                    </div>
+                    <div id="g_id_onload"
+                         data-client_id="${googleClientId}"
+                         data-callback="handleCredentialResponse"
+                         data-auto_prompt="false">
+                    </div>
+                    <div class="g_id_signin"
+                         data-type="standard"
+                         data-size="large"
+                         data-theme="outline"
+                         data-text="sign_in_with"
+                         data-shape="rectangular"
+                         data-logo_alignment="left">
+                    </div>
+                    <div id="loginStatus" style="margin-top: 1rem; color: var(--error-color);"></div>
+                </div>
+                <footer>
+                    由 <a href="https://arcantstudio.com" target="_blank" rel="noopener noreferrer">Arcant Studio</a> 提供技術支持
+                </footer>
+            `;
+            // Initialize Google Sign-In if not already done by the library
+            if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+                 google.accounts.id.renderButton(
+                    document.querySelector('.g_id_signin'),
+                    { type: 'standard', size: 'large', theme: 'outline', text: 'sign_in_with', shape: 'rectangular', logo_alignment: 'left' }
+                );
+            }
+        }
+
+        // Callback function for Google Sign-In
+        window.handleCredentialResponse = async (response) => {
+            if (response.credential) {
+                googleIdToken = response.credential;
+                document.getElementById('loginStatus').textContent = '驗證中...';
+
+                // Verify token with worker to check if user is allowed
+                try {
+                    const verificationResponse = await fetch(yourWorkerUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${googleIdToken}`
+                        },
+                        body: JSON.stringify({ action: 'verify_user' }) // Custom action for verification
+                    });
+
+                    const result = await verificationResponse.json();
+
+                    if (verificationResponse.ok && result.success) {
+                        renderAdminPanel();
+                        initializeAdminLogic();
+                    } else {
+                        googleIdToken = null; // Clear token if verification fails
+                        document.getElementById('loginStatus').textContent = result.message || '登入失敗，您可能沒有權限。';
+                    }
+                } catch (error) {
+                    googleIdToken = null;
+                    document.getElementById('loginStatus').textContent = '網路錯誤，無法驗證登入。';
+                    console.error('Login verification error:', error);
+                }
+
+            } else {
+                document.getElementById('loginStatus').textContent = 'Google 登入失敗。';
+            }
+        };
 
         // --- 模式二：後台管理介面相關函式 ---
 
@@ -383,12 +464,14 @@
 
             // 刪除功能
             async function deleteLink(name, itemElement) {
-                // 提醒：您的 Worker 需要有處理 DELETE 方法的邏輯
                 if (!confirm(`確定要刪除短網址 "${name}" 嗎？`)) return;
                 try {
                     const resp = await fetch(yourWorkerUrl, {
                         method: 'DELETE',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${googleIdToken}` // Include token
+                        },
                         body: JSON.stringify({ name }),
                     });
                     const data = await resp.json();
@@ -407,8 +490,11 @@
             async function loadLinks() {
                 linksList.innerHTML = '載入中...';
                 try {
-                    // 提醒：您的 Worker 需要有處理 GET 方法的邏輯
-                    const resp = await fetch(`${yourWorkerUrl}?list=1`);
+                    const resp = await fetch(`${yourWorkerUrl}?list=1`, {
+                        headers: {
+                            'Authorization': `Bearer ${googleIdToken}` // Include token
+                        }
+                    });
                     const data = await resp.json();
                     if (!Array.isArray(data)) {
                         linksList.innerHTML = '<p>無法取得短網址列表</p>';
@@ -463,7 +549,10 @@
                 try {
                     const response = await fetch(yourWorkerUrl, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${googleIdToken}` // Include token
+                        },
                         body: JSON.stringify({ name, url }),
                     });
                     const result = await response.json();
